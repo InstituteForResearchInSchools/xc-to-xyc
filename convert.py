@@ -2,9 +2,14 @@ import argparse
 import os
 import re
 
+
 def convert(xc_directory, xc):
+    """
+    Convert a multiple content XC file into a number of separate XYC files
+    :param xc_directory: The directory containing the XC file
+    :param xc: The XC file we are working on
+    """
     file_name = os.path.basename(xc)
-    print(file_name)
     with open(os.path.join(xc_directory, xc), "r") as file:
         contents = file.read()
         counter = 0
@@ -24,7 +29,8 @@ def convert(xc_directory, xc):
                 out.write(f + "\n")
             counter += 1
 
-def get_file_list(path):
+
+def get_file_list(filepath):
     """
     Used to get a list of files in a directory
 
@@ -32,13 +38,14 @@ def get_file_list(path):
     :return: The list of files
     """
     files = []
-    for file in os.listdir(path):
+    for file in os.listdir(filepath):
         # if its a file...
-        if os.path.isfile and not file.startswith("."):
+        if os.path.isfile(filepath + os.path.sep + file) and not file.startswith("."):
             files.append(file)
     return files
 
-def get_directory_list(path):
+
+def get_directory_list(dirpath):
     """
     Used to get a list of directories in a directory
 
@@ -46,11 +53,12 @@ def get_directory_list(path):
     :return: The list of files
     """
     directories = []
-    for dir in os.listdir(path):
+    for dir in os.listdir(dirpath):
         # if its a directory
-        if os.path.isdir and not dir.startswith("."):
+        if os.path.isdir(dirpath + os.path.sep + dir) and not dir.startswith("."):
             directories.append(dir)
     return directories
+
 
 def get_format_from_file(file):
     """
@@ -67,8 +75,6 @@ def get_format_from_file(file):
         l = f.readline().strip("\n")
     except UnicodeDecodeError:
         return 0
-
-    print(l)
 
     # The file type value.
     filetypeval = 0
@@ -118,6 +124,31 @@ def get_format_from_file(file):
     return filetypeval
 
 
+def split_dsc(xc_directory, dsc):
+    """
+    Split a single DSC file into multiple DSC files - one per frame
+    :param xc_directory: The directory containing the files
+    :param dsc: The DSC file we are working on
+    """
+    file_name = os.path.basename(dsc).replace(".dsc", '')
+
+    with open(os.path.join(xc_directory, dsc), "r") as file:
+        contents = file.read()
+
+        # Remove the DSC header, it messes up the splitting later!
+        contents = re.sub('^A[0-9]{9}', '',  contents)
+
+        contents = contents.strip()
+
+        counter = 0
+        for dscframe in re.split(r'\[F[0-9]+\]', contents):
+            if dscframe != '':
+                # Add the required header to the file
+                dscframe = "A000000001\n" + "F[" + str(counter) + "]\n" + dscframe
+                out = open(os.path.join(xc_directory, "out", file_name + str(counter) + ".txt.dsc"), "w+")
+                out.write(dscframe)
+                counter += 1
+
 
 
 if __name__ == "__main__":
@@ -131,20 +162,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print(args)
-
     directories = get_directory_list(args.input)
-
-    print(directories)
 
     for directory in directories:
         files = get_file_list(os.path.join(args.input, directory))
         os.mkdir(os.path.join(os.path.join(args.input, directory), "out"))
         for file in files:
             file_format = get_format_from_file(os.path.join(args.input, directory,file))
-            print(file_format)
             if file_format == 8210:
                 convert(os.path.join(args.input, directory), file)
             if file_format == 9999:
-                #split_xyc(os.path.join(args.base_directory, directory), file)
-                print("dsc")
+                split_dsc(os.path.join(args.input, directory), file)
