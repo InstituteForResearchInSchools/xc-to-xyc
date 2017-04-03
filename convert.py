@@ -22,7 +22,7 @@ def convert(xc_directory, xc):
                     x = int(split_line[0]) // 255
                     y = int(split_line[0]) % 255
                     c = int(split_line[1])
-                    final_line = str(x) + " " + str(y) + " " + str(c)
+                    final_line = str(x) + "\t" + str(y) + "\t" + str(c)
                     frame_out.append(final_line)
             out = open(os.path.join(xc_directory, "out", file_name + str(counter) + ".txt"), "w+")
             for f in frame_out:
@@ -144,7 +144,7 @@ def split_dsc(xc_directory, dsc):
         for dscframe in re.split(r'\[F[0-9]+\]', contents):
             if dscframe != '':
                 # Add the required header to the file
-                dscframe = "A000000001\n" + "F[" + str(counter) + "]\n" + dscframe
+                dscframe = "A000000001\n" + "[F" + str(counter) + "]\n" + dscframe
                 out = open(os.path.join(xc_directory, "out", file_name + str(counter) + ".txt.dsc"), "w+")
                 out.write(dscframe)
                 counter += 1
