@@ -143,6 +143,7 @@ def split_dsc(xc_directory, dsc):
         counter = 0
         for dscframe in re.split(r'\[F[0-9]+\]', contents):
             if dscframe != '':
+                dscframe = dscframe[1:] # Remove newline at beginning of file
                 # Add the required header to the file
                 dscframe = "A000000001\n" + "[F" + str(counter) + "]\n" + dscframe
                 out = open(os.path.join(xc_directory, "out", file_name + str(counter) + ".txt.dsc"), "w+")
